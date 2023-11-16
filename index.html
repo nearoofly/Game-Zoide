@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jeux de voiture</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f3f3f3;
+    }
+
+    .game-container {
+      width: 80vw;
+      height: 70vh;
+      background-color: #333;
+      position: relative;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #car {
+      width: 150px;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      transition: left 0.3s ease-in-out;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    /* Style pour les boules de feu */
+    .fireball {
+      width: 20px;
+      height: 20px;
+      background-color: #ff4500; /* Couleur orange pour les boules de feu */
+      border-radius: 50%; /* Rendre les boules de feu rondes */
+      position: absolute;
+      top: -20px;
+      animation: fall 2s linear infinite; /* Ajout de l'animation de chute */
+    }
+
+    /* Nouvelle classe pour les boules de feu de chaque côté */
+    .left-side,
+    .right-side {
+      animation-duration: 3s; /* Durée de l'animation pour les boules de feu latérales */
+    }
+
+    .left-side {
+      left: 5%;
+    }
+
+    .right-side {
+      right: 5%;
+    }
+
+    @keyframes fall {
+      to {
+        top: 100%;
+      }
+    }
+  </style>
+<style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-image: url('Gifted/gif.GIF');
+      background-size: cover;
+      background-position: center;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="game-container">
+    <img src="image/car.png" alt="car" id="car">
+    <!-- Les boules de feu, assurez-vous qu'elles aient la classe .fireball -->
+    <div class="fireball" style="left: 20%;"></div>
+    <div class="fireball" style="left: 40%;"></div>
+    <div class="fireball" style="left: 60%;"></div>
+    <!-- Autant d'éléments .fireball que vous le souhaitez -->
+    <div id="score">Score: 0</div>
+
+    <!-- Nouvelles boules de feu pour les côtés gauche et droit -->
+    <div class="fireball left-side"></div>
+    <div class="fireball right-side"></div>
+  </div>
+  <script>
+    const car = document.getElementById('car');
+    let carPosition = 50;
+    let score = 0;
+    let round = 0;
+    let timerStart;
+    let timerEnd;
+
+    function moveCar(direction) {
+      if (direction === 'left') {
+        carPosition -= 10;
+      } else {
+        carPosition += 10;
+      }
+
+      car.style.left = carPosition + '%';
+      checkCollision();
+    }
+
+    function checkCollision() {
+      const fireballs = document.querySelectorAll('.fireball');
+      fireballs.forEach((fireball) => {
+        const fireballRect = fireball.getBoundingClientRect();
+        const carRect = car.getBoundingClientRect();
+
+        if (
+          fireballRect.top + fireballRect.height >= carRect.top &&
+          fireballRect.left + fireballRect.width >= carRect.left &&
+          fireballRect.right - fireballRect.width <= carRect.right &&
+          fireballRect.bottom - fireballRect.height <= carRect.bottom
+        ) {
+          gameOver();
+        }
+      });
+    }
+
+    function gameOver() {
+      alert('Game Over');
+      // Vous pouvez ajouter d'autres actions pour la fin du jeu ici
+    }
+
+    function updateScore() {
+      score++;
+      document.getElementById('score').innerText = `Score: ${score}`;
+      if (score % 4 === 0) {
+        const fireballs = document.querySelectorAll('.fireball');
+        fireballs.forEach((fireball, index) => {
+          const newPosition = (carPosition + ((index + 1) * 20)) % 100;
+          fireball.style.left = newPosition + '%';
+        });
+      }
+      if (score >= 10) {
+        round++;
+        score = 0;
+        document.getElementById('score').innerText = `Score: ${score} | Round: ${round}`;
+        if (round === 10) {
+          timerEnd = new Date();
+          const totalTime = (timerEnd - timerStart) / 1000;
+          const hours = Math.floor(totalTime / 3600);
+          const minutes = Math.floor((totalTime % 3600) / 60);
+          const seconds = Math.floor(totalTime % 60);
+          alert(`You won!\nTotal Time: ${hours}h ${minutes}m ${seconds}s`);
+        }
+      }
+    }
+
+    setInterval(updateScore, 1000);
+
+    document.addEventListener
+('keydown', (event) => {
+      if (event.key === 'ArrowLeft') {
+        moveCar('left');
+      } else if (event.key === 'ArrowRight') {
+        moveCar('right');
+      }
+    });
+
+    // Ajout de la prise en charge des événements tactiles pour les smartphones
+    let xDown = null;
+    let yDown = null;
+
+    function handleTouchStart(event) {
+      const firstTouch = event.touches[0];
+      xDown = firstTouch.clientX;
+      yDown = firstTouch.clientY;
+    }
+
+    function handleTouchMove(event) {
+      if (!xDown || !yDown) {
+        return;
+      }
+
+      const xUp = event.touches[0].clientX;
+      const yUp = event.touches[0].clientY;
+
+      const xDiff = xDown - xUp;
+      const yDiff = yDown - yUp;
+
+      if (Math.abs(xDiff) > Math.abs(yDiff)) {
+        if (xDiff > 0) {
+          moveCar('right');
+        } else {
+          moveCar('left');
+        }
+      }
+
+      xDown = null;
+      yDown = null;
+    }
+
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+
+    timerStart = new Date();
+  </script>
+</body>
+</html>
+
+
+
